@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#1d4ed8">
+    <title>Pemeliharaan - UNeed Malang</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-slate-50 px-4 py-10 text-slate-800 flex items-center justify-center">
+    <main class="w-full max-w-xl rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-sm sm:p-12">
+        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo UNeed Malang" class="mx-auto mb-6 h-20 w-20 object-contain">
+        <div class="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-2xl text-blue-700" aria-hidden="true">⚙</div>
+        <p class="mb-2 text-xs font-extrabold uppercase tracking-[0.18em] text-blue-700">UNeed Malang</p>
+        <h1 class="text-3xl font-extrabold tracking-tight text-slate-900">Kami sedang melakukan pemeliharaan</h1>
+        <p class="mt-4 leading-7 text-slate-600">{{ maintenance_message }}</p>
+        <p class="mt-8 rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-500">Silakan muat ulang halaman ini setelah beberapa saat.</p>
+        <p class="mt-5 text-xs leading-5 text-slate-400">Untuk operasional, UNeed mencatat halaman dan waktu kunjungan serta akun bila login. Sistem tidak menyimpan alamat IP atau isi formulir.</p>
+    </main>
+</body>
+</html>

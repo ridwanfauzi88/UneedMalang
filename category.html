@@ -1,0 +1,208 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ cat_title or 'Kategori Layanan' }} - UNeed Malang{% endblock %}
+
+{% block content %}
+<div class="category-page min-h-full w-full bg-slate-50" x-data="{ filterOpen: false, viewMode: '{{ view }}' }">
+
+    <div class="mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+        <!-- Top Bar Navigasi -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+        <div>
+            <h1 class="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">{{ cat_title or 'Tempat & Layanan' }}</h1>
+            <p class="text-sm text-slate-500">Menampilkan {{ total_records }}{% if active_filter %} dari {{ total_all }}{% endif %} data{% if search_query %} · pencarian “{{ search_query }}”{% endif %}</p>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <!-- Toggle Mode Tampilan (Kartu / Tabel) -->
+            <div class="bg-white border border-slate-200 rounded-xl p-1 flex items-center shadow-sm text-xs">
+                <button @click="viewMode = 'cards'" :class="viewMode === 'cards' ? 'bg-blue-600 text-white font-bold' : 'text-slate-600 hover:bg-slate-50'" class="px-3 py-1.5 rounded-lg transition">
+                    🎴 Kartu
+                </button>
+                <button @click="viewMode = 'table'" :class="viewMode === 'table' ? 'bg-blue-600 text-white font-bold' : 'text-slate-600 hover:bg-slate-50'" class="px-3 py-1.5 rounded-lg transition">
+                    📊 Tabel
+                </button>
+            </div>
+
+            <!-- Tombol Filter Jendela (Modal) -->
+            <button @click="filterOpen = true" class="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50 transition">
+                <span>🔍 Filter & Urutkan</span>{% if active_filter %}<span class="w-2 h-2 rounded-full bg-blue-600"></span>{% endif %}
+            </button>
+            
+        </div>
+    </div>
+
+    <form method="get" action="{{ url_for('category_detail', cat_name=cat_key) }}" class="mb-5 flex flex-col gap-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm sm:flex-row">
+        <label for="category-search" class="sr-only">Cari dalam kategori {{ cat_title }}</label>
+        <div class="flex min-w-0 flex-1 items-center gap-3 px-3"><i class="fa-solid fa-magnifying-glass text-slate-400" aria-hidden="true"></i><input id="category-search" type="search" name="q" maxlength="120" value="{{ search_query }}" placeholder="Cari nama, alamat, fasilitas, atau layanan..." class="w-full bg-transparent py-2.5 text-sm text-slate-800 outline-none placeholder:text-slate-400"></div>
+        <input type="hidden" name="sort" value="{{ sort }}"><input type="hidden" name="min_harga" value="{{ min_harga if min_harga is not none else '' }}"><input type="hidden" name="max_harga" value="{{ max_harga if max_harga is not none else '' }}"><input type="hidden" name="view" :value="viewMode">
+        <div class="flex gap-2"><button type="submit" class="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-blue-700 sm:flex-none"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Cari</button>{% if search_query %}<a href="{{ url_for('category_detail', cat_name=cat_key, sort=sort, min_harga=min_harga, max_harga=max_harga, view=view) }}" class="inline-flex items-center justify-center rounded-xl bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-200">Reset</a>{% endif %}</div>
+    </form>
+
+    {% include 'components/location_explorer.html' %}
+
+    <!-- TAMPILAN MODE KARTU (CARD GRID) -->
+    <div x-show="viewMode === 'cards'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
+        {% if data %}
+            {% for item in data %}
+                {% set item_name = item['Nama Tempat'] or item['Nama Kos'] or item['Nama Toko'] or item['Nama Klinik'] or 'Tanpa Nama' %}
+                <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between" data-place-card data-category="{{ cat_key }}" data-record-id="{{ item['_record_id'] }}" data-title="{{ item_name }}" data-lat="{{ item['_coordinates'][0] if item['_coordinates'] else '' }}" data-lng="{{ item['_coordinates'][1] if item['_coordinates'] else '' }}">
+                    <div class="p-5">
+                        <div class="flex justify-between items-start mb-2 gap-2">
+                            <span class="px-2.5 py-1 bg-blue-100 text-blue-700 text-[10px] font-bold rounded-md">
+                                {% set badge = [item['Tipe (Putra/Putri/Campur)'], item['Kategori Makanan'], item['Jenis Produk'], item['Jenis Layanan']]|select('string')|reject('equalto','-')|list %}{{ badge[0] if badge else cat_title }}
+                            </span>
+                            <div class="flex flex-wrap items-center justify-end gap-2">
+                                {% if item['_rating'] is not none %}<span class="text-xs font-semibold text-amber-600">⭐ {{ '%.1f'|format(item['_rating']) }}</span>{% endif %}
+                                <span data-dss-score {% if item['_dss_score'] is none %}hidden{% endif %} class="text-[10px] font-bold px-2 py-1 rounded-md bg-emerald-50 text-emerald-700">{% if item['_dss_score'] is not none %}DSS {{ '%.3f'|format(item['_dss_score']) }}{% endif %}</span>
+                                <span data-current-distance hidden class="text-[10px] font-bold px-2 py-1 rounded-md bg-blue-50 text-blue-700"></span>
+                            </div>
+                        </div>
+
+                        <h3 class="font-bold text-slate-800 text-base line-clamp-1">{{ item_name }}</h3>
+                        
+                        {% if item['Alamat'] and item['Alamat'] != '-' %}
+                            <p class="text-xs text-slate-500 mt-1 line-clamp-2">📍 {{ item['Alamat'] }}</p>
+                        {% endif %}
+
+                        <!-- Detail Info Tambahan -->
+                        <div class="mt-4 p-3 bg-slate-50 rounded-xl text-[11px] text-slate-600 space-y-1">
+                            {% if item['Jam Buka'] and item['Jam Buka'] != '-' %}
+                                <p><span class="font-bold text-slate-700">🕒 Jam Buka:</span> {{ item['Jam Buka'] }}</p>
+                            {% endif %}
+                            {% if item['Kontak/WA'] and item['Kontak/WA'] != '-' %}
+                                <p><span class="font-bold text-slate-700">📞 WA/Kontak:</span> {{ item['Kontak/WA'] }}</p>
+                            {% endif %}
+                            {% if item['Fasilitas'] and item['Fasilitas'] != '-' %}
+                                <p><span class="font-bold text-slate-700">✨ Fasilitas:</span> {{ item['Fasilitas'] }}</p>
+                            {% endif %}
+                            {% if item['Menu Andalan'] and item['Menu Andalan'] != '-' %}
+                                <p><span class="font-bold text-slate-700">🍲 Menu Andalan:</span> {{ item['Menu Andalan'] }}</p>
+                            {% endif %}
+                            {% if item['Terima BPJS (Y/N)'] and item['Terima BPJS (Y/N)'] != '-' %}
+                                <p><span class="font-bold text-slate-700">💳 BPJS:</span> {{ item['Terima BPJS (Y/N)'] }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="px-5 py-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+                        <div>
+                            {% if item['Harga per Bulan (Rp)'] and item['Harga per Bulan (Rp)'] != '-' %}
+                                <p class="text-[10px] text-slate-400">Harga</p>
+                                <p class="text-sm font-extrabold text-blue-600">Rp {{ item['Harga per Bulan (Rp)'] }}</p>
+                            {% elif item['Range Harga (Rp)'] and item['Range Harga (Rp)'] != '-' %}
+                                <p class="text-[10px] text-slate-400">Range Harga</p>
+                                <p class="text-sm font-extrabold text-emerald-600">{{ item['Range Harga (Rp)'] }}</p>
+                            {% else %}
+                                <p class="text-xs font-bold text-slate-600">{{ cat_title }}</p>
+                            {% endif %}
+                        </div>
+
+                        <div class="flex gap-2">
+                            {% if item['_menu_url'] %}
+                                <a href="{{ item['_menu_url'] }}" target="_blank" rel="noopener noreferrer" class="px-3 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-medium transition">🍽️ Menu</a>
+                            {% endif %}
+                            {% if item['_maps_url'] %}
+                                <a href="{{ item['_maps_url'] }}" target="_blank" rel="noopener noreferrer" class="px-3 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-xs font-medium transition flex items-center gap-1">
+                                    🗺️ Maps
+                                </a>
+                            {% endif %}
+                            {% if item['_directions_url'] %}<a href="{{ item['_directions_url'] }}" target="_blank" rel="noopener noreferrer" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-medium transition" aria-label="Petunjuk arah ke {{ item_name }}">Arah</a>{% endif %}
+                            <form method="post" action="{{ url_for('save_place', cat_name=cat_key, item_id=item['_record_id']) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="px-3 py-2 border border-slate-200 hover:bg-slate-100 text-slate-700 rounded-lg text-xs font-bold transition" aria-label="Simpan {{ item_name }}">Simpan</button></form>
+                            <a href="{{ url_for('detail', category=cat_key, item_id=item['_record_id']) }}" class="px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-medium transition">Detail</a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-span-full bg-white p-8 rounded-2xl text-center border border-slate-200">
+                {% if active_filter and total_all %}
+                    <p class="text-slate-500 text-sm">Tidak ada data yang cocok dengan pencarian atau filter ini.</p>
+                    <a href="{{ url_for('category_detail', cat_name=cat_key) }}" class="inline-block mt-2 text-xs font-bold text-blue-600 hover:underline">Reset filter</a>
+                {% else %}
+                <p class="text-slate-500 text-sm">Belum ada data CSV untuk kategori <strong>{{ cat_title or 'ini' }}</strong>.</p>
+                <p class="text-xs text-slate-400 mt-1">Pastikan file CSV ditaruh di folder <code>uploads_excel/{{ cat_key or 'nama_kategori' }}.csv</code></p>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- TAMPILAN MODE TABEL DATA EXCEL/CSV -->
+    <div x-show="viewMode === 'table'" class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm mb-10">
+        {% if data %}
+            <div class="overflow-x-auto max-h-[600px]">
+                <table class="w-full text-left text-xs border-collapse">
+                    <thead class="bg-slate-100 text-slate-700 font-bold sticky top-0 border-b border-slate-200">
+                        <tr>
+                            {% for col in headers %}
+                                <th class="p-3.5 whitespace-nowrap">{{ col }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 text-slate-600">
+                        {% for row in data %}
+                            <tr class="hover:bg-slate-50 transition">
+                                {% for col in headers %}
+                                    <td class="p-3.5 whitespace-nowrap">
+                                        {% if col == 'Link Google Maps' and row['_maps_url'] %}
+                                            <a href="{{ row['_maps_url'] }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg font-bold border border-blue-200 transition">🗺️ Google Maps</a>
+                                        {% elif col == 'Link Menu' and row['_menu_url'] %}
+                                            <a href="{{ row['_menu_url'] }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 px-2.5 py-1 bg-amber-50 text-amber-700 hover:bg-amber-100 rounded-lg font-bold border border-amber-200 transition">Lihat menu</a>
+                                        {% else %}
+                                            {{ row[col] }}
+                                        {% endif %}
+                                    </td>
+                                {% endfor %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="p-8 text-center text-slate-500 text-sm">
+                Belum ada baris data yang dapat ditampilkan untuk kategori ini.
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- MODAL FILTER JENDELA BUKA-TUTUP -->
+    <div x-show="filterOpen" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" x-cloak @keydown.escape.window="filterOpen = false">
+        <form method="get" action="{{ url_for('category_detail', cat_name=cat_key) }}" @click.outside="filterOpen = false" class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-4">
+            <input type="hidden" name="view" :value="viewMode">
+            <input type="hidden" name="q" value="{{ search_query }}">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="font-bold text-slate-800">Filter & Pengurutan</h3>
+                <button type="button" @click="filterOpen = false" class="text-slate-400 hover:text-slate-600 font-bold text-xl leading-none">&times;</button>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-2">Urutkan Berdasarkan</label>
+                <select name="sort" class="w-full p-2.5 border rounded-xl text-xs bg-slate-50 outline-none">
+                    <option value="" {% if not sort %}selected{% endif %}>Default (sesuai data)</option>
+                    <option value="rating" {% if sort == 'rating' %}selected{% endif %}>Rating Tertinggi</option>
+                    <option value="harga_asc" {% if sort == 'harga_asc' %}selected{% endif %}>Harga Termurah</option>
+                    <option value="harga_desc" {% if sort == 'harga_desc' %}selected{% endif %}>Harga Termahal</option>
+                    <option value="jarak" {% if sort == 'jarak' %}selected{% endif %}>Jarak terdekat (aktifkan lokasi perangkat)</option>
+                    <option value="dss" {% if sort == 'dss' %}selected{% endif %}>Skor rekomendasi DSS tertinggi</option>
+                </select>
+                <p class="mt-1.5 text-[10px] leading-4 text-slate-400">Jarak hanya dihitung dari posisi perangkat setelah Anda mengaktifkan fitur lokasi. Tanpa izin GPS, kriteria jarak tidak dipakai dan tempat tanpa koordinat valid tidak diberi jarak buatan.</p>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-2">Rentang Harga (Rp)</label>
+                <div class="flex gap-2">
+                    <input type="number" name="min_harga" min="0" step="1000" value="{{ min_harga if min_harga is not none else '' }}" placeholder="Min, mis. 10000" class="w-full p-2.5 border rounded-xl text-xs">
+                    <input type="number" name="max_harga" min="0" step="1000" value="{{ max_harga if max_harga is not none else '' }}" placeholder="Max, mis. 50000" class="w-full p-2.5 border rounded-xl text-xs">
+                </div>
+                <p class="text-[10px] text-slate-400 mt-1.5">Tempat yang belum punya data harga tidak ikut tampil saat filter harga dipakai.</p>
+            </div>
+
+            <div class="flex gap-2">
+                <a href="{{ url_for('category_detail', cat_name=cat_key) }}" class="flex-1 text-center py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition">Reset</a>
+                <button type="submit" class="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition">Terapkan Filter</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

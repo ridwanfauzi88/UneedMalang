@@ -1,0 +1,26 @@
+<header class="site-navbar sticky top-0 z-30 border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur">
+    <div class="mx-auto flex h-[76px] w-full max-w-[1600px] items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
+        <div class="flex min-w-0 items-center gap-3">
+            {% if session.get('user') %}
+            <button type="button" onclick="toggleSidebar()" aria-label="Buka navigasi" aria-controls="sidebar" aria-expanded="false" class="rounded-xl p-2.5 text-slate-600 transition hover:bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-600">
+                <i class="fa-solid fa-bars text-xl" aria-hidden="true"></i>
+            </button>
+            {% endif %}
+            <a href="{{ url_for('dashboard') if session.get('user') else url_for('login') }}" class="flex min-w-0 items-center gap-2.5" aria-label="UNeed Malang, halaman utama">
+                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo UNeed" class="h-11 w-11 flex-shrink-0 object-contain sm:h-12 sm:w-12">
+                <span class="flex min-w-0 flex-col leading-tight">
+                    <span class="whitespace-nowrap text-base font-extrabold tracking-tight text-slate-900 sm:text-xl">UNeed <span class="text-blue-600">Malang</span></span>
+                    <span class="hidden text-[11px] font-medium text-slate-400 sm:block">Layanan Terpadu Publik</span>
+                </span>
+            </a>
+        </div>
+        {% if current_user_email %}
+        <div class="flex items-center gap-2 sm:gap-3">
+            <span class="hidden max-w-56 truncate text-sm text-slate-500 md:inline">{{ current_user_name or current_user_email }}</span>
+            <a href="{{ url_for('profile') }}" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 sm:px-4">
+                <i class="fa-regular fa-user" aria-hidden="true"></i><span>Akun Saya</span>
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</header>

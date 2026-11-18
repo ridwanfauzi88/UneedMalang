@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#1d4ed8">
+    <title>{% block title %}UNeed Malang{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% if maps_interactive_enabled %}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
+    {% endif %}
+    {% if (request.endpoint == 'category_detail' and request.view_args and request.view_args.get('cat_name') == 'kos') or (request.endpoint == 'detail' and request.args.get('category') == 'kos') or (request.endpoint == 'detail_path' and request.view_args and request.view_args.get('cat_name') == 'kos') %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/kos.css') }}">
+    {% endif %}
+    <style>[x-cloak]{display:none!important}[data-place-card][hidden]{display:none!important}.no-scrollbar::-webkit-scrollbar{display:none}.no-scrollbar{-ms-overflow-style:none;scrollbar-width:none}</style>
+</head>
+<body class="app-shell min-h-screen text-slate-800 flex flex-col font-sans theme-{{ user_theme }} font-size-{{ font_size }}">
+    {% set auth_page = request.endpoint in ['login', 'register', 'forgot_password', 'reset_password', 'otp_verification', 'booting'] %}
+    {% set wide_page = request.endpoint in ['dashboard', 'category_detail'] %}
+
+    {% if not auth_page %}
+        {% include 'components/navbar.html' %}
+        {% if session.get('user') %}{% include 'components/sidebar.html' %}{% endif %}
+    {% endif %}
+
+    <main class="{% if wide_page %}flex-grow min-w-0 w-full{% elif auth_page %}flex-grow flex items-center justify-center p-4 sm:p-6{% else %}flex-grow w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8{% endif %}">
+        {% if not auth_page %}
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="w-full max-w-3xl mx-auto space-y-2 mb-5 px-4 pt-4" role="status" aria-live="polite">
+                        {% for category, message in messages %}
+                            <div class="rounded-xl border px-4 py-3 text-sm {% if category == 'danger' %}border-red-200 bg-red-50 text-red-800{% elif category == 'success' %}border-emerald-200 bg-emerald-50 text-emerald-800{% else %}border-blue-200 bg-blue-50 text-blue-800{% endif %}">{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+        {% endif %}
+        {% block content %}{% endblock %}
+    </main>
+
+    {% if request.endpoint != 'booting' %}
+        {% include 'components/footer.html' %}
+    {% endif %}
+    <script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/geolocation.js') }}" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    {% block page_scripts %}{% endblock %}
+</body>
+</html>

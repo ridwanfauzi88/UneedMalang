@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard - UNeed Malang{% endblock %}
+{% block content %}
+<div class="dashboard-page min-h-full bg-slate-50">
+    <div class="mx-auto w-full max-w-[1400px] space-y-7 px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+        <section class="dashboard-hero relative overflow-hidden rounded-3xl border border-blue-100 bg-gradient-to-br from-white via-blue-50 to-indigo-50 p-6 shadow-sm sm:p-9 lg:p-11">
+            <div class="pointer-events-none absolute -right-16 -top-20 h-72 w-72 rounded-full bg-blue-200/30 blur-3xl" aria-hidden="true"></div>
+            <div class="relative max-w-3xl">
+                <span class="mb-4 inline-flex items-center gap-2 rounded-full border border-blue-100 bg-white/90 px-3 py-1.5 text-xs font-bold text-blue-700 shadow-sm"><span class="h-2 w-2 rounded-full bg-emerald-500"></span> Layanan publik untuk masyarakat Malang</span>
+                <h1 class="max-w-2xl text-3xl font-black leading-tight tracking-tight text-slate-900 sm:text-4xl lg:text-5xl">Temukan kebutuhan lokal Anda <span class="text-blue-600">lebih mudah.</span></h1>
+                <p class="mt-4 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">Cari informasi kos, tempat makan, café, layanan kesehatan, ATK, dan pusat perbelanjaan di Malang dalam satu tempat. Gunakan rekomendasi sebagai panduan awal sebelum berkunjung.</p>
+            </div>
+        </section>
+
+        <section aria-labelledby="search-heading" class="space-y-3">
+            <div>
+                <h2 id="search-heading" class="text-xl font-extrabold tracking-tight text-slate-900">Apa yang sedang Anda cari?</h2>
+                <p class="mt-1 text-sm text-slate-500">Cari nama tempat, alamat, fasilitas, menu, atau jenis layanan.</p>
+            </div>
+            <form method="GET" action="{{ url_for('dashboard') }}" class="search-panel flex flex-col gap-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm sm:flex-row">
+                <label for="dashboard-search" class="sr-only">Cari layanan</label>
+                <div class="flex min-w-0 flex-1 items-center gap-3 px-3"><i class="fa-solid fa-magnifying-glass text-slate-400" aria-hidden="true"></i><input id="dashboard-search" name="q" type="search" maxlength="120" value="{{ search_query }}" placeholder="Contoh: klinik, kopi, kos, fotokopi, mall..." class="w-full bg-transparent py-3 text-sm text-slate-800 outline-none placeholder:text-slate-400"></div>
+                <div class="flex gap-2"><button type="submit" class="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-bold text-white transition hover:bg-blue-700 sm:flex-none"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Cari layanan</button>{% if search_query %}<a href="{{ url_for('dashboard') }}" class="inline-flex items-center justify-center rounded-xl bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-200">Reset</a>{% endif %}</div>
+            </form>
+            {% if search_query %}<p class="text-sm text-slate-600">Ditemukan <strong>{{ search_result_count }}</strong> hasil untuk “{{ search_query }}”.</p>{% endif %}
+        </section>
+
+        {% include 'components/location_explorer.html' %}
+
+        <section aria-labelledby="recommend-heading" class="space-y-4">
+            <div class="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+                <div><p class="text-xs font-bold uppercase tracking-wider text-blue-600">Pilihan UNeed</p><h2 id="recommend-heading" class="mt-1 text-xl font-extrabold tracking-tight text-slate-900">{% if search_query %}Hasil pencarian{% else %}Rekomendasi layanan{% endif %}</h2><p class="mt-1 text-sm text-slate-500">{% if search_query %}Hasil dari seluruh kategori yang cocok dengan kata kunci Anda.{% else %}Pilihan lintas kategori berdasarkan data dan skor rekomendasi yang tersedia.{% endif %}</p></div>
+                <span class="text-xs text-slate-400">{% if search_query %}Menampilkan {{ recommendations|length }} dari {{ search_result_count }} hasil{% else %}{{ recommendations|length }} rekomendasi pilihan{% endif %}</span>
+            </div>
+            {% if recommendations %}
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {% for item in recommendations %}
+                <article class="service-card flex min-w-0 flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md" data-place-card data-category="{{ item['_category_key'] }}" data-record-id="{{ item['_record_id'] }}" data-title="{{ item['_name'] }}" data-lat="{{ item['_coordinates'][0] if item['_coordinates'] else '' }}" data-lng="{{ item['_coordinates'][1] if item['_coordinates'] else '' }}">
+                    <div class="mb-4 flex items-start justify-between gap-3">
+                        <span class="inline-flex items-center gap-2 rounded-lg bg-blue-50 px-2.5 py-1.5 text-xs font-bold text-blue-700"><span aria-hidden="true">{{ item['_category_icon'] }}</span>{{ item['_category_title'] }}</span>
+                        {% if item['_rating'] is not none %}<span class="whitespace-nowrap text-xs font-bold text-amber-600"><i class="fa-solid fa-star" aria-hidden="true"></i> {{ '%.1f'|format(item['_rating']) }}</span>{% endif %}
+                    </div>
+                    <h3 class="text-lg font-extrabold leading-snug text-slate-900">{{ item['_name'] }}</h3>
+                    {% if item['_address'] and item['_address'] != '-' %}<p class="mt-2 line-clamp-2 text-sm leading-5 text-slate-500"><i class="fa-solid fa-location-dot mr-1.5 text-slate-400" aria-hidden="true"></i>{{ item['_address'] }}</p>{% else %}<p class="mt-2 text-sm text-slate-400">Alamat belum tersedia di dataset.</p>{% endif %}
+                    <div class="mt-4 flex flex-wrap gap-2 text-xs">
+                        {% if item['_pmin'] is not none %}<span class="rounded-lg bg-slate-50 px-2.5 py-1.5 font-semibold text-slate-700">{% if item['_pmin'] == item['_pmax'] %}Rp {{ '{:,.0f}'.format(item['_pmin']).replace(',', '.') }}{% else %}Mulai Rp {{ '{:,.0f}'.format(item['_pmin']).replace(',', '.') }}{% endif %}</span>{% endif %}
+                        <span data-current-distance hidden class="rounded-lg bg-blue-50 px-2.5 py-1.5 font-semibold text-blue-700"></span>
+                        <span data-dss-score {% if item['_dss_score'] is none %}hidden{% endif %} class="rounded-lg bg-emerald-50 px-2.5 py-1.5 font-bold text-emerald-700">{% if item['_dss_score'] is not none %}Skor DSS {{ '%.3f'|format(item['_dss_score']) }}{% endif %}</span>
+                    </div>
+                    <div class="mt-auto flex gap-2 pt-5">
+                        <a href="{{ url_for('detail', category=item['_category_key'], item_id=item['_record_id']) }}" class="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-slate-900 px-3 py-2.5 text-sm font-bold text-white transition hover:bg-blue-700"><i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i> Lihat detail</a>
+                        {% if item['_maps_url'] %}<a href="{{ item['_maps_url'] }}" target="_blank" rel="noopener noreferrer" aria-label="Buka lokasi {{ item['_name'] }} di Google Maps" class="inline-flex items-center justify-center rounded-xl border border-slate-200 px-3 py-2.5 text-slate-600 transition hover:bg-slate-50"><i class="fa-solid fa-map-location-dot" aria-hidden="true"></i></a>{% endif %}
+                        {% if item['_directions_url'] %}<a href="{{ item['_directions_url'] }}" target="_blank" rel="noopener noreferrer" aria-label="Petunjuk arah ke {{ item['_name'] }}" class="inline-flex items-center justify-center rounded-xl border border-slate-200 px-3 py-2.5 text-slate-600 transition hover:bg-slate-50"><i class="fa-solid fa-route" aria-hidden="true"></i></a>{% endif %}
+                        <form method="post" action="{{ url_for('save_place', cat_name=item['_category_key'], item_id=item['_record_id']) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="inline-flex items-center justify-center rounded-xl border border-slate-200 px-3 py-2.5 text-slate-600 transition hover:bg-slate-50" aria-label="Simpan {{ item['_name'] }}"><i class="fa-regular fa-bookmark" aria-hidden="true"></i></button></form>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-12 text-center"><span class="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-xl text-slate-400"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></span><h3 class="mt-4 font-bold text-slate-800">Belum ada layanan yang cocok</h3><p class="mx-auto mt-1 max-w-md text-sm text-slate-500">Coba kata kunci lain atau hapus pencarian. Kategori lengkap dapat dibuka dari menu hamburger di kiri atas.</p><a href="{{ url_for('dashboard') }}" class="mt-4 inline-flex rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-blue-700">Tampilkan rekomendasi</a></div>
+            {% endif %}
+        </section>
+        <p class="border-t border-slate-200 pt-4 text-xs leading-5 text-slate-400">Informasi ditampilkan berdasarkan dataset yang tersedia. Pastikan detail, harga, jam operasional, dan ketersediaan kepada penyedia layanan sebelum mengambil keputusan.</p>
+    </div>
+</div>
+{% endblock %}

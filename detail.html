@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}{{ item['_name'] }} - UNeed Malang{% endblock %}
+{% block content %}
+<section class="w-full max-w-4xl mx-auto space-y-5">
+    <a href="{{ url_for('category_detail', cat_name=cat_key) }}" class="inline-flex items-center gap-2 text-sm font-bold text-blue-600 hover:text-blue-800"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Kembali ke {{ cat_title }}</a>
+    <article class="bg-white rounded-2xl sm:rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-6 sm:p-8 bg-gradient-to-br from-slate-50 via-white to-blue-50 border-b border-slate-100">
+            <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-5">
+                <div class="min-w-0">
+                    <span class="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-blue-100 text-blue-700 text-xs font-bold">{{ cat_title }}</span>
+                    <h1 class="text-2xl sm:text-3xl font-black text-slate-900 mt-3 break-words">{{ item['_name'] }}</h1>
+                    {% if item['_address'] and item['_address'] != '-' %}<p class="mt-3 text-sm text-slate-600 leading-relaxed"><i class="fa-solid fa-location-dot mr-2 text-blue-600" aria-hidden="true"></i>{{ item['_address'] }}</p>{% endif %}
+                </div>
+                <div class="flex flex-wrap gap-2 sm:justify-end">
+                    {% if item['_rating'] is not none %}<span class="px-3 py-2 rounded-xl bg-amber-50 text-amber-700 border border-amber-100 text-sm font-extrabold"><i class="fa-solid fa-star mr-1" aria-hidden="true"></i>{{ '%.1f'|format(item['_rating']) }}/5</span>{% endif %}
+                    {% if item['_dss_score'] is not none %}<span class="px-3 py-2 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-100 text-sm font-extrabold">DSS {{ '%.3f'|format(item['_dss_score']) }}</span>{% endif %}
+                </div>
+            </div>
+            <div class="flex flex-wrap gap-3 mt-5">
+                {% if item['_maps_url'] %}<a href="{{ item['_maps_url'] }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold"><i class="fa-solid fa-map-location-dot" aria-hidden="true"></i> Buka di Google Maps</a>{% endif %}
+                {% if item['_directions_url'] %}<a href="{{ item['_directions_url'] }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-blue-200 hover:bg-blue-50 text-blue-700 text-sm font-bold"><i class="fa-solid fa-route" aria-hidden="true"></i> Petunjuk Arah</a>{% endif %}
+                <form method="post" action="{{ url_for('save_place', cat_name=cat_key, item_id=item['_record_id']) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm font-bold"><i class="fa-regular fa-bookmark" aria-hidden="true"></i> Simpan tempat</button></form>
+                {% if item['_menu_url'] %}<a href="{{ item['_menu_url'] }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm font-bold"><i class="fa-solid fa-book-open" aria-hidden="true"></i> Lihat menu</a>{% endif %}
+            </div>
+        </div>
+        <div class="p-6 sm:p-8">
+            <div class="flex items-center justify-between gap-3 mb-4"><h2 class="text-lg font-extrabold text-slate-900">Informasi dari dataset</h2><span class="text-[10px] text-slate-400">Sumber: data lokal UNeed</span></div>
+            <dl class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {% for column, value in item.items() %}
+                    {% if not column.startswith('_') and value|string not in ['-', '', 'None', 'nan'] and column not in ['Link Google Maps', 'Link Menu'] %}
+                    <div class="rounded-xl border border-slate-200 bg-slate-50/70 p-4 min-w-0">
+                        <dt class="text-[11px] font-bold uppercase tracking-wide text-slate-500">{{ column }}</dt>
+                        <dd class="mt-1.5 text-sm text-slate-800 whitespace-normal break-words">{{ value }}</dd>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+                {% if item['_dist'] is not none %}<div class="rounded-xl border border-slate-200 bg-slate-50/70 p-4"><dt class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Jarak garis lurus dari lokasi perangkat</dt><dd class="mt-1.5 text-sm text-slate-800">{{ '%.2f'|format(item['_dist']) }} km</dd></div>{% endif %}
+            </dl>
+            <div class="mt-6 rounded-xl border border-blue-100 bg-blue-50/70 p-4 text-xs leading-relaxed text-blue-900"><strong>Catatan DSS:</strong> skor membantu pengurutan, bukan pilihan terbaik secara universal. Kriteria yang tidak memiliki data tidak dihitung dan bobot yang tersedia dinormalisasi. Jarak baru dihitung dari posisi perangkat setelah fitur lokasi diaktifkan; Haversine adalah jarak garis lurus, bukan jarak jalan atau estimasi waktu perjalanan.</div>
+        </div>
+    </article>
+</section>
+{% endblock %}

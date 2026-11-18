@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% from 'components/macros.html' import place_card with context %}
+{% block title %}Cari “{{ q }}” - UNeed Malang{% endblock %}
+{% block content %}
+<div class="space-y-6">
+    <div>
+        <a href="{{ url_for('dashboard') }}" class="text-xs font-semibold text-blue-600 hover:underline">← Kembali ke Dashboard</a>
+        <h1 class="text-2xl font-bold text-slate-800 mt-1">Hasil pencarian{% if q %}: “{{ q }}”{% endif %}</h1>
+        {% if q and not too_short %}<p class="text-xs text-slate-500">{{ total }} tempat ditemukan{% if total > results|length %} (menampilkan {{ results|length }} teratas){% endif %}</p>{% endif %}
+    </div>
+    {% if not q %}
+        <div class="card p-8 text-center text-sm text-slate-500">Ketik kata kunci pada kolom pencarian di atas.</div>
+    {% elif too_short %}
+        <div class="card p-8 text-center text-sm text-slate-500">Kata kunci minimal 2 karakter.</div>
+    {% elif not results %}
+        <div class="card p-8 text-center text-sm text-slate-500">Tidak ada tempat yang cocok dengan “{{ q }}”. Coba kata kunci lain.</div>
+    {% else %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for item in results %}{{ place_card(item) }}{% endfor %}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

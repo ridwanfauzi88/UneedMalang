@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% set auth_page = not me %}
+{% block title %}{{ title }} - UNeed Malang{% endblock %}
+{% block auth_content %}{{ self.content() }}{% endblock %}
+{% block content %}
+<div class="max-w-md mx-auto text-center py-16">
+    <p class="text-6xl font-black text-blue-600">{{ code }}</p>
+    <h1 class="text-xl font-bold text-slate-800 mt-3">{{ title }}</h1>
+    {% if desc %}<p class="text-sm text-slate-500 mt-2">{{ desc }}</p>{% endif %}
+    <a href="{{ url_for('dashboard') if me else url_for('login') }}" class="inline-block mt-6 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl">{{ 'Kembali ke Dashboard' if me else 'Ke halaman login' }}</a>
+</div>
+{% endblock %}

@@ -1,0 +1,55 @@
+:root{color-scheme:light;--brand:#2563eb;--surface:#fff;--line:#e2e8f0;--text:#1e293b;--page:#f8fafc}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{min-width:320px;background:var(--page);color:var(--text);transition:background-color .18s ease,color .18s ease}
+button,input,select,textarea{font:inherit}
+button,a{touch-action:manipulation}
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+button:disabled{opacity:.55;cursor:not-allowed}
+.sidebar-transition{transition:transform .22s ease-in-out}
+.sidebar-link{display:flex;align-items:center;gap:.75rem;padding:.75rem .875rem;border-radius:.75rem;color:#475569;transition:background-color .15s,color .15s}
+.sidebar-link:hover{background:#f8fafc;color:#2563eb}
+.sidebar-link-active{background:#eff6ff;color:#1d4ed8;font-weight:700}
+.site-navbar{isolation:isolate}
+.dashboard-page,.category-page{background:var(--page)}
+.service-card{min-height:255px}
+.settings-surface,.settings-page .bg-white{transition:background-color .18s ease,border-color .18s ease,color .18s ease}
+::-webkit-scrollbar{width:7px;height:7px}
+::-webkit-scrollbar-track{background:#f1f5f9}
+::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:999px}
+.font-size-small{font-size:14px}.font-size-medium{font-size:16px}.font-size-large{font-size:18px}
+.font-size-small :is(.text-xs){font-size:.68rem!important}.font-size-small :is(.text-sm){font-size:.82rem!important}.font-size-small :is(.text-base){font-size:.92rem!important}.font-size-small :is(.text-lg){font-size:1.02rem!important}.font-size-small :is(.text-xl){font-size:1.12rem!important}.font-size-small :is(.text-2xl){font-size:1.3rem!important}.font-size-small :is(.text-3xl){font-size:1.55rem!important}.font-size-small :is(.text-4xl){font-size:1.9rem!important}.font-size-small :is(.text-5xl){font-size:2.2rem!important}
+.font-size-large :is(.text-xs){font-size:.82rem!important}.font-size-large :is(.text-sm){font-size:1rem!important}.font-size-large :is(.text-base){font-size:1.12rem!important}.font-size-large :is(.text-lg){font-size:1.3rem!important}.font-size-large :is(.text-xl){font-size:1.45rem!important}.font-size-large :is(.text-2xl){font-size:1.7rem!important}.font-size-large :is(.text-3xl){font-size:2rem!important}.font-size-large :is(.text-4xl){font-size:2.4rem!important}.font-size-large :is(.text-5xl){font-size:2.8rem!important}
+.font-size-small input,.font-size-small select,.font-size-small textarea{font-size:13px}.font-size-large input,.font-size-large select,.font-size-large textarea{font-size:1rem}
+/* Accent themes */
+.theme-indigo{--brand:#4f46e5}.theme-emerald{--brand:#059669}.theme-rose{--brand:#e11d48}
+.theme-indigo .bg-blue-600{background-color:#4f46e5!important}.theme-indigo .hover\:bg-blue-700:hover{background-color:#4338ca!important}.theme-indigo .text-blue-600{color:#4f46e5!important}.theme-indigo .bg-blue-50{background-color:#eef2ff!important}.theme-indigo .border-blue-100{border-color:#c7d2fe!important}
+.theme-emerald .bg-blue-600{background-color:#059669!important}.theme-emerald .hover\:bg-blue-700:hover{background-color:#047857!important}.theme-emerald .text-blue-600{color:#059669!important}.theme-emerald .bg-blue-50{background-color:#ecfdf5!important}.theme-emerald .border-blue-100{border-color:#a7f3d0!important}
+.theme-rose .bg-blue-600{background-color:#e11d48!important}.theme-rose .hover\:bg-blue-700:hover{background-color:#be123c!important}.theme-rose .text-blue-600{color:#e11d48!important}.theme-rose .bg-blue-50{background-color:#fff1f2!important}.theme-rose .border-blue-100{border-color:#fecdd3!important}
+/* Dark mode applies to shared navigation, cards, forms, and the main dashboard content. */
+body.theme-dark{--page:#0f172a;--surface:#1e293b;--line:#334155;--text:#e2e8f0;background:#0f172a;color:#e2e8f0;color-scheme:dark}
+body.theme-dark .bg-white,body.theme-dark [class*="bg-white/"]{background-color:#1e293b!important;color:#e2e8f0!important;border-color:#334155!important}
+body.theme-dark .bg-slate-50,body.theme-dark [class*="bg-slate-50/"]{background-color:#111c30!important}
+body.theme-dark .bg-slate-100{background-color:#263449!important}
+body.theme-dark .bg-blue-50{background-color:#172554!important}
+body.theme-dark .bg-blue-100{background-color:#1e3a8a!important}
+body.theme-dark .text-slate-900,body.theme-dark .text-slate-800,body.theme-dark .text-slate-700,body.theme-dark .text-slate-600{color:#e2e8f0!important}
+body.theme-dark .text-slate-500,body.theme-dark .text-slate-400{color:#cbd5e1!important}
+body.theme-dark .border-slate-100,body.theme-dark .border-slate-200,body.theme-dark .border-slate-300{border-color:#334155!important}
+body.theme-dark input,body.theme-dark select,body.theme-dark textarea{background:#0f172a;color:#f8fafc;border-color:#475569}
+body.theme-dark .dashboard-hero{background:linear-gradient(135deg,#172554,#1e293b)!important;border-color:#334155!important}
+body.theme-dark .dashboard-hero h1,body.theme-dark .dashboard-hero p{color:#e2e8f0!important}
+body.theme-dark .dashboard-hero .text-blue-600{color:#93c5fd!important}
+body.theme-dark .settings-page .bg-blue-50{background:#172554!important;color:#dbeafe!important;border-color:#1e40af!important}
+body.theme-dark .sidebar-link{color:#cbd5e1}
+body.theme-dark .sidebar-link:hover{background:#263449;color:#bfdbfe}
+body.theme-dark .sidebar-link-active{background:#172554;color:#bfdbfe}
+body.theme-dark .bg-slate-900{background-color:#020617!important}
+@media(max-width:640px){.service-card{min-height:0}.dashboard-hero{border-radius:1.25rem}.settings-page .flex.items-center.gap-4{align-items:flex-start}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
+
+/* 6-Category Grid Fix - Added via Automated Script */
+.category-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.5rem; }
+@media (max-width: 1024px) { .category-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .category-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

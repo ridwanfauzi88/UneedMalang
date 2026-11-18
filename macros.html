@@ -1,0 +1,80 @@
+{# Makro bersama: flash, CSRF, field, kartu tempat #}
+{% macro flashes() %}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="space-y-2 mb-5" role="status" aria-live="polite">
+      {% for cat, msg in messages %}
+        <div class="flash flash-{{ cat }} px-4 py-3 rounded-xl text-xs font-semibold border">{{ msg }}</div>
+      {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+{% endmacro %}
+
+{% macro csrf() %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endmacro %}
+
+{% macro field(id, label, type='text', placeholder='', required=true, value='', autocomplete='', extra='') %}
+  <div>
+    <label for="{{ id }}" class="block text-sm font-medium text-slate-700 mb-1">{{ label }}</label>
+    <input type="{{ type }}" id="{{ id }}" name="{{ id }}" value="{{ value }}" placeholder="{{ placeholder }}"
+           {% if required %}required{% endif %} {% if autocomplete %}autocomplete="{{ autocomplete }}"{% endif %} {{ extra|safe }}
+           class="input">
+  </div>
+{% endmacro %}
+
+{% macro stars(rating) %}
+  {% if rating is not none %}<span class="text-amber-500 font-semibold" title="Rating {{ '%.1f'|format(rating) }} dari 5">★ {{ '%.1f'|format(rating) }}</span>{% endif %}
+{% endmacro %}
+
+{# Kartu tempat tunggal; dipakai di kategori, dashboard (ringkas) dan pencarian #}
+{% macro place_card(item, show_score=false, rank=none, compact=false) %}
+  <article class="card flex flex-col justify-between overflow-hidden" data-card
+           data-cat="{{ item.cat }}" data-id="{{ item.id }}" data-name="{{ item.name }}">
+    <div class="p-5">
+      <div class="flex justify-between items-start mb-2 gap-2">
+        <span class="badge">{% if rank %}{{ ['🥇','🥈','🥉'][rank-1] }} Top {{ rank }}{% else %}{{ item.badge or category_short[item.cat] }}{% endif %}</span>
+        {{ stars(item.rating) }}
+      </div>
+      <h3 class="font-bold text-slate-900 text-base leading-snug">
+        <a href="{{ url_for('detail_item', cat_key=item.cat, item_id=item.id) }}" class="hover:underline">{{ item.name }}</a>
+      </h3>
+      {% if item.address %}<p class="text-xs text-slate-500 mt-1 line-clamp-2">📍 {{ item.address }}</p>{% endif %}
+
+      {% if not compact %}
+      <dl class="mt-4 p-3 bg-slate-50 rounded-xl text-[11px] text-slate-600 space-y-1 panel">
+        {% if item.dist is not none %}<div><dt class="inline font-bold">📏 Jarak:</dt> <dd class="inline">{{ item.dist|dist_label }} dari lokasi perangkat setelah GPS diaktifkan</dd></div>{% endif %}
+        {% for label, col, icon in [('Jam Buka','Jam Buka','🕒'),('Fasilitas','Fasilitas','✨'),('Menu Andalan','Menu Andalan','🍲'),('BPJS','Terima BPJS (Y/N)','💳'),('Kamar Kosong','Kamar Kosong (Y/N)','🛏️')] %}
+          {% if item.raw.get(col) %}<div><dt class="inline font-bold">{{ icon }} {{ label }}:</dt> <dd class="inline">{{ item.raw[col] }}</dd></div>{% endif %}
+        {% endfor %}
+        {% if item.phone %}<div><dt class="inline font-bold">📞 WA/Kontak:</dt> <dd class="inline">{{ item.phone }}</dd></div>{% endif %}
+      </dl>
+      {% else %}
+        {% if item.dist is not none %}<p class="text-[11px] text-slate-500 mt-0.5">📏 {{ item.dist|dist_label }} dari lokasi perangkat setelah GPS diaktifkan</p>{% endif %}
+      {% endif %}
+      {% if show_score and item.score is not none %}
+        <p class="mt-3 text-[11px] text-slate-500" title="Kriteria yang dipakai: {% for p in item.score_parts %}{{ p.label }} {{ (p.weight*100)|round|int }}%{% if not loop.last %}, {% endif %}{% endfor %}">
+          <span class="font-bold text-blue-600">Skor DSS {{ '%.3f'|format(item.score) }}</span>
+          {% if item.criteria_used|length < 3 %}· data tidak lengkap ({{ item.criteria_used|length }}/3 kriteria){% endif %}
+        </p>
+      {% elif show_score %}
+        <p class="mt-3 text-[11px] text-slate-400">Data belum cukup untuk skor rekomendasi</p>
+      {% endif %}
+    </div>
+
+    <div class="px-5 py-3 bg-slate-50 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 panel">
+      <div>
+        {% set pl = item|price_label %}
+        {% if pl %}<p class="text-[10px] text-slate-400">Harga</p><p class="text-sm font-extrabold text-blue-600">{{ pl }}{% if item.cat == 'kos' %} <span class="text-[10px] font-normal text-slate-400">/bulan</span>{% endif %}</p>
+        {% else %}<p class="text-[11px] font-medium text-slate-400">Harga belum tersedia</p>{% endif %}
+      </div>
+      <div class="flex flex-wrap gap-2">
+        {% if item.menu_url %}<a href="{{ item.menu_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-amber">🍽️ Menu</a>{% endif %}
+        {% if item.maps_url %}<a href="{{ item.maps_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-green">🗺️ Maps</a>{% endif %}
+        <button type="button" class="btn btn-ghost" @click="cartToggle($el.closest('[data-card]').dataset)" :aria-pressed="cartHas('{{ item.cat }}','{{ item.id }}')" :class="cartHas('{{ item.cat }}','{{ item.id }}') ? 'is-on' : ''" aria-label="Simpan {{ item.name }} ke daftar pilihan">
+          <span x-text="cartHas('{{ item.cat }}','{{ item.id }}') ? '✓ Disimpan' : '＋ Simpan'"></span>
+        </button>
+        <a href="{{ url_for('detail_item', cat_key=item.cat, item_id=item.id) }}" class="btn btn-dark">Detail</a>
+      </div>
+    </div>
+  </article>
+{% endmacro %}

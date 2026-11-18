@@ -1,0 +1,240 @@
+{% extends 'base.html' %}
+{% block title %}Cari Kos di Malang - UNeed Malang{% endblock %}
+
+{% macro filter_fields(prefix) %}
+    <div class="space-y-1.5">
+        <label for="{{ prefix }}-min-price" class="block text-sm font-semibold text-slate-700">Harga minimum per bulan</label>
+        <input id="{{ prefix }}-min-price" name="min_harga" type="number" min="0" step="10000" inputmode="numeric" value="{{ min_harga if min_harga is not none else '' }}" placeholder="Contoh: 500000" class="kos-input w-full" />
+    </div>
+    <div class="space-y-1.5">
+        <label for="{{ prefix }}-max-price" class="block text-sm font-semibold text-slate-700">Harga maksimum per bulan</label>
+        <input id="{{ prefix }}-max-price" name="max_harga" type="number" min="0" step="10000" inputmode="numeric" value="{{ max_harga if max_harga is not none else '' }}" placeholder="Contoh: 1500000" class="kos-input w-full" />
+        <p class="text-xs text-slate-500">Kos tanpa harga tercatat tidak dapat dicocokkan dengan filter harga.</p>
+    </div>
+    {% if type_options %}
+    <div class="space-y-1.5">
+        <label for="{{ prefix }}-type" class="block text-sm font-semibold text-slate-700">Tipe kos</label>
+        <select id="{{ prefix }}-type" name="tipe" class="kos-input w-full">
+            <option value="">Semua tipe yang tercatat</option>
+            {% for option in type_options %}<option value="{{ option }}" {% if selected_type == option %}selected{% endif %}>Kos {{ option|lower }}</option>{% endfor %}
+        </select>
+    </div>
+    {% endif %}
+    {% if area_options %}
+    <div class="space-y-1.5">
+        <label for="{{ prefix }}-area" class="block text-sm font-semibold text-slate-700">Kecamatan / area</label>
+        <select id="{{ prefix }}-area" name="area" class="kos-input w-full">
+            <option value="">Semua area yang tercatat</option>
+            {% for option in area_options %}<option value="{{ option }}" {% if selected_area == option %}selected{% endif %}>{{ option }}</option>{% endfor %}
+        </select>
+    </div>
+    {% endif %}
+    {% if facility_options %}
+    <div class="space-y-1.5">
+        <label for="{{ prefix }}-facility" class="block text-sm font-semibold text-slate-700">Fasilitas</label>
+        <select id="{{ prefix }}-facility" name="fasilitas" class="kos-input w-full">
+            <option value="">Semua fasilitas yang tercatat</option>
+            {% for option in facility_options %}<option value="{{ option }}" {% if selected_facility == option %}selected{% endif %}>{{ option }}</option>{% endfor %}
+        </select>
+    </div>
+    {% endif %}
+    {% if availability_options %}
+    <div class="space-y-1.5">
+        <label for="{{ prefix }}-availability" class="block text-sm font-semibold text-slate-700">Ketersediaan kamar</label>
+        <select id="{{ prefix }}-availability" name="ketersediaan" class="kos-input w-full">
+            <option value="">Semua status yang tercatat</option>
+            {% for option in availability_options %}<option value="{{ option }}" {% if selected_availability == option %}selected{% endif %}>{{ option }}</option>{% endfor %}
+        </select>
+    </div>
+    {% endif %}
+    <div class="space-y-1.5">
+        <label for="{{ prefix }}-sort" class="block text-sm font-semibold text-slate-700">Urutkan hasil</label>
+        <select id="{{ prefix }}-sort" name="sort" class="kos-input w-full">
+            <option value="dss" {% if sort == 'dss' %}selected{% endif %}>Rekomendasi UNeed (DSS)</option>
+            <option value="rating" {% if sort == 'rating' %}selected{% endif %}>Rating tertinggi</option>
+            <option value="harga_asc" {% if sort == 'harga_asc' %}selected{% endif %}>Harga terendah</option>
+            <option value="harga_desc" {% if sort == 'harga_desc' %}selected{% endif %}>Harga tertinggi</option>
+            <option value="jarak" {% if sort == 'jarak' %}selected{% endif %}>Jarak garis lurus terdekat</option>
+        </select>
+        <p class="text-xs leading-relaxed text-slate-500">Urutan awal menggunakan skor DSS dari kriteria yang tersedia. Aktifkan “Gunakan Lokasi Saya” untuk menghitung jarak dan skor DSS dari posisi perangkatmu.</p>
+    </div>
+{% endmacro %}
+
+{% block content %}
+<div class="kos-page min-h-full w-full" x-data="{ filterOpen: false, openFilter() { this.filterOpen = true; this.$nextTick(() => this.$refs.filterClose.focus()); }, closeFilter() { this.filterOpen = false; this.$nextTick(() => this.$refs.filterButton.focus()); }, trapFilterTab(event) { const dialog = this.$refs.filterDialog; const items = Array.from(dialog.querySelectorAll('a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled])')); if (!items.length) return; const index = items.indexOf(document.activeElement); const next = index < 0 ? 0 : (index + (event.shiftKey ? -1 : 1) + items.length) % items.length; event.preventDefault(); items[next].focus(); } }" @keydown.escape.window="if (filterOpen) closeFilter()">
+    <section class="kos-hero">
+        <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
+            <nav aria-label="Breadcrumb" class="mb-6 text-sm text-blue-100">
+                <a href="{{ url_for('dashboard') }}" class="hover:text-white focus-visible:underline">Beranda</a>
+                <span class="mx-2 text-blue-200" aria-hidden="true">/</span><span class="font-semibold text-white" aria-current="page">Kos di Malang</span>
+            </nav>
+            <div class="grid items-center gap-8 lg:grid-cols-[minmax(0,1fr)_280px]">
+                <div class="max-w-3xl">
+                    <span class="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-bold tracking-wide text-blue-50">
+                        <i class="fa-solid fa-house" aria-hidden="true"></i> TEMUKAN HUNIANMU
+                    </span>
+                    <h1 class="mt-4 text-3xl font-black leading-tight tracking-tight text-white sm:text-4xl lg:text-5xl">Temukan kos yang cocok untuk aktivitasmu di Malang</h1>
+                    <p class="mt-4 max-w-2xl text-sm leading-6 text-blue-100 sm:text-base">Jelajahi pilihan kos berdasarkan area, tipe hunian, dan anggaran. Informasi ditampilkan sesuai data yang tersedia di UNeed.</p>
+                    <form method="get" action="{{ url_for('category_detail', cat_name='kos') }}" role="search" class="kos-search mt-7 flex flex-col gap-2 rounded-2xl bg-white p-2 shadow-xl sm:flex-row">
+                        <label for="kos-search" class="sr-only">Cari kos berdasarkan nama, alamat, area, tipe, atau fasilitas</label>
+                        <div class="flex min-w-0 flex-1 items-center gap-3 px-3">
+                            <i class="fa-solid fa-magnifying-glass text-lg text-slate-400" aria-hidden="true"></i>
+                            <input id="kos-search" name="q" type="search" maxlength="120" value="{{ search_query }}" placeholder="Nama kos, alamat, area, tipe, atau fasilitas" class="min-w-0 flex-1 border-0 bg-transparent py-3 text-sm text-slate-800 outline-none placeholder:text-slate-400 focus:ring-0" />
+                        </div>
+                        <input type="hidden" name="sort" value="{{ sort }}" />
+                        <input type="hidden" name="min_harga" value="{{ min_harga if min_harga is not none else '' }}" />
+                        <input type="hidden" name="max_harga" value="{{ max_harga if max_harga is not none else '' }}" />
+                        {% if selected_type %}<input type="hidden" name="tipe" value="{{ selected_type }}" />{% endif %}
+                        {% if selected_area %}<input type="hidden" name="area" value="{{ selected_area }}" />{% endif %}
+                        {% if selected_facility %}<input type="hidden" name="fasilitas" value="{{ selected_facility }}" />{% endif %}
+                        {% if selected_availability %}<input type="hidden" name="ketersediaan" value="{{ selected_availability }}" />{% endif %}
+                        <button type="submit" class="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-3 text-sm font-bold text-white transition hover:bg-blue-700 focus-visible:outline-white">
+                            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Cari kos
+                        </button>
+                    </form>
+                    <p class="mt-3 text-xs text-blue-100">{{ total_all }} listing dengan nama kos yang dapat dikenali dari data saat ini.</p>
+                </div>
+                <div class="kos-hero-art hidden lg:flex" aria-hidden="true">
+                    <div class="kos-art-window"><div class="kos-art-sky"></div><div class="kos-art-building"><span></span><span></span><span></span><span></span><span></span><span></span></div><div class="kos-art-plant"><i></i><i></i><i></i></div></div>
+                    <div class="kos-art-chip"><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>Jelajahi kos di Malang</span></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="mx-auto max-w-7xl px-4 py-7 sm:px-6 sm:py-9 lg:px-8">
+        {% if hidden_incomplete > 0 and dataset_state not in ['error', 'empty', 'unidentified'] %}
+        <div class="mb-6 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900" role="status">
+            <i class="fa-solid fa-circle-info mt-0.5" aria-hidden="true"></i>
+            <p><strong>{{ hidden_incomplete }} baris data belum memiliki nama kos.</strong> Baris tersebut tidak ditampilkan sebagai listing terpisah agar informasi yang belum teridentifikasi tidak menyesatkan.</p>
+        </div>
+        {% endif %}
+
+        {% include 'components/location_explorer.html' %}
+
+        <div class="mb-5 flex items-end justify-between gap-4">
+            <div>
+                <p class="text-xs font-bold uppercase tracking-[.16em] text-blue-700">Pilihan hunian</p>
+                <h2 class="mt-1 text-xl font-extrabold tracking-tight text-slate-900 sm:text-2xl">Jelajahi kos di Malang</h2>
+            </div>
+            <button type="button" x-ref="filterButton" @click="openFilter()" aria-haspopup="dialog" aria-controls="kos-filter-dialog" class="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 shadow-sm transition hover:border-blue-300 hover:text-blue-700 lg:hidden">
+                <i class="fa-solid fa-sliders" aria-hidden="true"></i> Filter{% if active_filter_count %}<span class="kos-filter-count">{{ active_filter_count }}</span>{% endif %}
+            </button>
+        </div>
+
+        {% if type_options %}
+        <nav aria-label="Filter tipe kos" class="mb-7 flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+            <a href="{{ url_for('category_detail', cat_name='kos', q=search_query or None, sort=sort, min_harga=min_harga, max_harga=max_harga, area=selected_area or None, fasilitas=selected_facility or None, ketersediaan=selected_availability or None) }}" class="kos-type-pill {% if not selected_type %}is-active{% endif %}">Semua kos <span>{{ total_all }}</span></a>
+            {% for option in type_options %}
+            <a href="{{ url_for('category_detail', cat_name='kos', q=search_query or None, sort=sort, min_harga=min_harga, max_harga=max_harga, tipe=option, area=selected_area or None, fasilitas=selected_facility or None, ketersediaan=selected_availability or None) }}" class="kos-type-pill {% if selected_type == option %}is-active{% endif %}">Kos {{ option|lower }} <span>{{ type_counts[option] }}</span></a>
+            {% endfor %}
+        </nav>
+        {% endif %}
+
+        <div class="grid items-start gap-6 lg:grid-cols-[260px_minmax(0,1fr)] xl:gap-8">
+            <aside class="hidden lg:block">
+                <form method="get" action="{{ url_for('category_detail', cat_name='kos') }}" class="kos-filter-panel">
+                    <div class="mb-5 flex items-center justify-between border-b border-slate-100 pb-4">
+                        <div><h3 class="font-extrabold text-slate-900">Filter pencarian</h3><p class="mt-1 text-xs text-slate-500">Sesuaikan dengan kebutuhanmu</p></div>
+                        <i class="fa-solid fa-sliders text-blue-600" aria-hidden="true"></i>
+                    </div>
+                    <input type="hidden" name="q" value="{{ search_query }}" />
+                    <div class="space-y-5">{{ filter_fields('desktop') }}</div>
+                    <div class="mt-6 grid grid-cols-1 gap-2">
+                        <button type="submit" class="kos-primary-button">Terapkan filter</button>
+                        <a href="{{ url_for('category_detail', cat_name='kos') }}" class="kos-secondary-button">Reset filter</a>
+                    </div>
+                </form>
+            </aside>
+
+            <section aria-labelledby="kos-results-heading" class="min-w-0">
+                <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <h3 id="kos-results-heading" class="text-base font-extrabold text-slate-900">{% if search_query %}Hasil pencarian{% else %}Daftar kos{% endif %}</h3>
+                        <p class="mt-1 text-sm text-slate-500">Menampilkan <strong class="text-slate-800">{{ total_records }}</strong>{% if active_filter %} dari {{ total_all }}{% endif %} listing{% if search_query %} untuk “{{ search_query }}”{% endif %}.</p>
+                    </div>
+                    <p class="text-xs text-slate-500">Urutan: <span class="font-bold text-slate-700">{{ sort_label }}</span></p>
+                </div>
+
+                {% if selected_type or selected_area or selected_facility or selected_availability or min_harga is not none or max_harga is not none %}
+                <div class="mb-4 flex flex-wrap gap-2" aria-label="Filter aktif">
+                    {% if selected_type %}<span class="kos-active-filter">Tipe: {{ selected_type }}</span>{% endif %}
+                    {% if selected_area %}<span class="kos-active-filter">Area: {{ selected_area }}</span>{% endif %}
+                    {% if selected_facility %}<span class="kos-active-filter">Fasilitas: {{ selected_facility }}</span>{% endif %}
+                    {% if selected_availability %}<span class="kos-active-filter">{{ selected_availability }}</span>{% endif %}
+                    {% if min_harga is not none or max_harga is not none %}<span class="kos-active-filter">Harga: {{ min_harga|rupiah if min_harga is not none else 'tanpa batas bawah' }} – {{ max_harga|rupiah if max_harga is not none else 'tanpa batas atas' }}</span>{% endif %}
+                    <a class="kos-clear-link" href="{{ url_for('category_detail', cat_name='kos') }}">Hapus semua filter</a>
+                </div>
+                {% endif %}
+
+                {% if dataset_state == 'error' %}
+                    <div class="kos-empty-state" role="alert"><div class="kos-empty-icon"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i></div><h4>Data kos belum dapat dimuat</h4><p>Sumber data gagal dibaca. Ini bukan berarti tidak ada kos; format file perlu diperiksa oleh pengelola.</p></div>
+                {% elif dataset_state == 'empty' %}
+                    <div class="kos-empty-state"><div class="kos-empty-icon"><i class="fa-solid fa-house-circle-exclamation" aria-hidden="true"></i></div><h4>Belum ada data kos</h4><p>Dataset kos belum berisi listing yang dapat ditampilkan. Coba kembali setelah data tersedia.</p></div>
+                {% elif dataset_state == 'unidentified' %}
+                    <div class="kos-empty-state"><div class="kos-empty-icon"><i class="fa-solid fa-clipboard-list" aria-hidden="true"></i></div><h4>Data kos perlu dilengkapi</h4><p>Ada {{ hidden_incomplete }} baris data sumber, tetapi belum ada yang memiliki nama kos. UNeed tidak menampilkan baris tersebut sebagai properti yang berbeda sebelum identitasnya jelas.</p></div>
+                {% elif not data %}
+                    <div class="kos-empty-state"><div class="kos-empty-icon"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></div><h4>Tidak menemukan kos yang cocok</h4><p>{% if search_query %}Belum ada listing dengan informasi yang cocok dengan kata kunci tersebut.{% else %}Kombinasi filter ini belum cocok dengan data kos yang tersedia. Sebagian informasi harga, area, tipe, atau fasilitas mungkin belum diisi.{% endif %}</p><a href="{{ url_for('category_detail', cat_name='kos') }}" class="kos-primary-button mt-5 inline-flex">Reset pencarian dan filter</a></div>
+                {% else %}
+                    <div class="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+                        {% for item in data %}
+                        <article class="kos-listing-card" data-place-card data-category="kos" data-record-id="{{ item['_record_id'] }}" data-title="{{ item['_name'] }}" data-lat="{{ item['_coordinates'][0] if item['_coordinates'] else '' }}" data-lng="{{ item['_coordinates'][1] if item['_coordinates'] else '' }}">
+                            <div class="kos-photo-placeholder" aria-label="Foto kos belum tersedia">
+                                <div class="kos-photo-decoration"><span></span><span></span><span></span><i class="fa-solid fa-house" aria-hidden="true"></i></div>
+                                <span class="kos-photo-label"><i class="fa-regular fa-image" aria-hidden="true"></i> Foto belum tersedia</span>
+                            </div>
+                            <div class="flex flex-1 flex-col p-4 sm:p-5">
+                                <div class="mb-3 flex flex-wrap items-center gap-2">
+                                    {% if item['_type'] %}<span class="kos-badge-type">Kos {{ item['_type']|lower }}</span>{% endif %}
+                                    {% if item['_rating'] is not none %}<span class="kos-rating"><i class="fa-solid fa-star" aria-hidden="true"></i> {{ '%.1f'|format(item['_rating']) }}{% if item['_reviews'] is not none %}<span class="font-medium text-slate-500">({{ item['_reviews'] }} ulasan)</span>{% endif %}</span>{% endif %}
+                                    {% if item['_availability'] %}<span class="kos-availability {% if item['_availability'] == 'Tersedia' %}is-available{% endif %}">{{ item['_availability'] }}</span>{% endif %}
+                                </div>
+                                <h4 class="text-lg font-extrabold leading-snug text-slate-900">{{ item['_name'] }}</h4>
+                                {% if item['_area'] %}<p class="mt-2 flex items-center gap-2 text-sm font-semibold text-slate-600"><i class="fa-solid fa-location-dot text-blue-600" aria-hidden="true"></i>{{ item['_area'] }}</p>{% endif %}
+                                {% if item['_address'] and item['_address'] != '-' %}<p class="mt-1.5 line-clamp-2 text-sm leading-relaxed text-slate-500">{{ item['_address'] }}</p>{% else %}<p class="mt-1.5 text-sm italic text-slate-400">Alamat belum tercantum</p>{% endif %}
+                                {% if item['_facilities'] %}<div class="mt-3 flex flex-wrap gap-1.5">{% for facility in item['_facilities'][:3] %}<span class="kos-facility-chip">{{ facility }}</span>{% endfor %}</div>{% endif %}
+                                <div class="mt-auto border-t border-slate-100 pt-4">
+                                    <p class="text-xs font-medium text-slate-500">Harga sewa per bulan</p>
+                                    {% if item['_pmin'] is not none and item['_pmax'] is not none %}
+                                        {% if item['_pmin'] == item['_pmax'] %}<p class="mt-1 text-xl font-black tracking-tight text-blue-700">{{ item['_pmin']|rupiah }}<span class="ml-1 text-xs font-semibold text-slate-500">/ bulan</span></p>{% else %}<p class="mt-1 text-lg font-black tracking-tight text-blue-700">{{ item['_pmin']|rupiah }} – {{ item['_pmax']|rupiah }}<span class="ml-1 text-xs font-semibold text-slate-500">/ bulan</span></p>{% endif %}
+                                    {% else %}<p class="mt-1 text-base font-bold text-slate-500">Harga belum tercantum</p>{% endif %}
+                                    <div class="mt-3 flex flex-wrap items-center gap-3 text-xs text-slate-500">
+                                        <span data-current-distance hidden class="font-bold text-blue-700"></span>
+                                        <span data-dss-score {% if item['_dss_score'] is none %}hidden{% endif %} title="Skor bantu pengurutan berdasarkan kriteria yang tersedia"><i class="fa-solid fa-chart-line mr-1" aria-hidden="true"></i>{% if item['_dss_score'] is not none %}Skor DSS {{ '%.3f'|format(item['_dss_score']) }}{% endif %}</span>
+                                    </div>
+                                </div>
+                                <div class="mt-4 flex gap-2">
+                                    <a href="{{ url_for('detail', category='kos', item_id=item['_record_id']) }}" class="kos-primary-button flex-1">Lihat detail <i class="fa-solid fa-arrow-right ml-1" aria-hidden="true"></i></a>
+                                    {% if item['_maps_url'] %}<a href="{{ item['_maps_url'] }}" target="_blank" rel="noopener noreferrer" aria-label="Buka lokasi {{ item['_name'] }} di Google Maps" class="kos-map-button"><i class="fa-solid fa-map-location-dot" aria-hidden="true"></i></a>{% endif %}
+                                    {% if item['_directions_url'] %}<a href="{{ item['_directions_url'] }}" target="_blank" rel="noopener noreferrer" aria-label="Petunjuk arah ke {{ item['_name'] }}" class="kos-map-button"><i class="fa-solid fa-route" aria-hidden="true"></i></a>{% endif %}
+                                    <form method="post" action="{{ url_for('save_place', cat_name='kos', item_id=item['_record_id']) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="kos-map-button" aria-label="Simpan {{ item['_name'] }}"><i class="fa-regular fa-bookmark" aria-hidden="true"></i></button></form>
+                                </div>
+                            </div>
+                        </article>
+                        {% endfor %}
+                    </div>
+                    {% if hidden_incomplete > 0 %}<p class="mt-5 text-xs leading-relaxed text-slate-500">Catatan data: {{ hidden_incomplete }} baris sumber tidak ditampilkan karena nama kos belum tersedia. Informasi harga, rating, fasilitas, dan ketersediaan hanya muncul ketika tercatat dan valid.</p>{% endif %}
+                {% endif %}
+                {% if dataset_state == 'results' %}<p class="mt-6 text-xs leading-relaxed text-slate-500">Rekomendasi UNeed memakai skor DSS dari kriteria yang datanya tersedia. Skor membantu pengurutan dan bukan jaminan bahwa suatu kos paling baik untuk semua orang. Tanpa lokasi aktif, kriteria jarak tidak dipakai. Fitur Terdekat menghitung ulang jarak dan skor DSS dari posisi perangkat setelah izin diberikan.</p>{% endif %}
+            </section>
+        </div>
+    </div>
+
+    <div id="kos-filter-dialog" x-show="filterOpen" x-cloak class="fixed inset-0 z-[100] flex items-end justify-center bg-slate-950/55 p-0 backdrop-blur-sm sm:items-center sm:p-4" role="presentation" @click.self="closeFilter()">
+        <section x-ref="filterDialog" role="dialog" aria-modal="true" aria-labelledby="kos-filter-title" class="kos-filter-dialog max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-3xl bg-white p-5 shadow-2xl sm:rounded-2xl sm:p-6" @click.stop @keydown.tab="trapFilterTab($event)">
+            <div class="mb-5 flex items-start justify-between border-b border-slate-100 pb-4">
+                <div><h2 id="kos-filter-title" class="text-lg font-extrabold text-slate-900">Filter kos</h2><p class="mt-1 text-sm text-slate-500">Tampilkan pilihan yang sesuai kebutuhanmu.</p></div>
+                <button type="button" x-ref="filterClose" @click="closeFilter()" aria-label="Tutup filter" class="inline-flex h-10 w-10 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+            </div>
+            <form method="get" action="{{ url_for('category_detail', cat_name='kos') }}">
+                <input type="hidden" name="q" value="{{ search_query }}" />
+                <div class="space-y-5">{{ filter_fields('mobile') }}</div>
+                <div class="mt-6 grid grid-cols-2 gap-3 border-t border-slate-100 pt-4">
+                    <a href="{{ url_for('category_detail', cat_name='kos') }}" class="kos-secondary-button">Reset filter</a>
+                    <button type="submit" class="kos-primary-button">Terapkan filter</button>
+                </div>
+            </form>
+        </section>
+    </div>
+</div>
+{% endblock %}

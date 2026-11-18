@@ -1,0 +1,30 @@
+{
+    "kriteria": {
+        "harga": {
+            "tipe": "cost"
+        },
+        "jarak": {
+            "tipe": "cost"
+        },
+        "fasilitas": {
+            "tipe": "benefit"
+        },
+        "rating": {
+            "tipe": "benefit"
+        },
+        "kenyamanan": {
+            "tipe": "benefit"
+        },
+        "keamanan": {
+            "tipe": "benefit"
+        }
+    },
+    "bobot_default": {
+        "harga": 0.1667,
+        "jarak": 0.1667,
+        "fasilitas": 0.1667,
+        "rating": 0.1667,
+        "kenyamanan": 0.1666,
+        "keamanan": 0.1666
+    }
+}

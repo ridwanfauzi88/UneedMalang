@@ -1,0 +1,28 @@
+{# Daftar pilihan: tempat yang disimpan pengguna untuk dibandingkan (tersimpan di browser) #}
+<div x-show="cartOpen" x-cloak x-transition.opacity class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40" @click="cartOpen = false" aria-hidden="true"></div>
+<aside class="fixed top-0 right-0 w-96 max-w-[92vw] h-full bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out flex flex-col"
+       :class="cartOpen ? 'translate-x-0' : 'translate-x-full'" :aria-hidden="!cartOpen" aria-label="Daftar pilihan tempat">
+    <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+        <div>
+            <h2 class="font-bold text-slate-900 text-sm">Daftar Pilihan</h2>
+            <p class="text-[11px] text-slate-500">Tempat yang Anda simpan untuk dibandingkan</p>
+        </div>
+        <button type="button" @click="cartOpen = false" class="icon-btn" aria-label="Tutup daftar pilihan"><span aria-hidden="true" class="text-xl leading-none">&times;</span></button>
+    </div>
+    <ul class="flex-1 overflow-y-auto divide-y divide-slate-100">
+        <template x-for="it in cart" :key="it.cat + ':' + it.id">
+            <li class="p-4 flex items-start justify-between gap-3">
+                <div class="min-w-0">
+                    <a :href="'/detail/' + it.cat + '/' + it.id" class="font-semibold text-sm text-slate-800 hover:underline block truncate" x-text="it.name"></a>
+                    <span class="text-[11px] text-slate-500" x-text="catLabels[it.cat] || it.cat"></span>
+                </div>
+                <button type="button" class="text-[11px] font-bold text-red-600 hover:underline shrink-0" @click="cartToggle(it)" :aria-label="'Hapus ' + it.name">Hapus</button>
+            </li>
+        </template>
+        <li x-show="cart.length === 0" class="p-8 text-center text-sm text-slate-500">Daftar pilihan masih kosong. Tekan “＋ Simpan” pada kartu tempat.</li>
+    </ul>
+    <div class="p-4 border-t border-slate-100" x-show="cart.length > 0">
+        <button type="button" class="w-full py-2.5 text-xs font-bold rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700" @click="cartClear()">Kosongkan daftar pilihan</button>
+    </div>
+</aside>
+<script>window.UNEED_CATS = {{ category_short|tojson }};</script>
